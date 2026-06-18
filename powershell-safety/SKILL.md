@@ -19,6 +19,7 @@ When using Windows PowerShell, assume that paths, wildcards, quoting, native com
 ## Paths And Wildcards
 
 PowerShell treats `[]` as wildcard character classes. This breaks common Nuxt and Vue route files such as `[address].vue`.
+PowerShell also treats unquoted parentheses as syntax. This breaks route-group directories such as `app\pages\(home)`, even for read-only commands.
 
 Use this:
 
@@ -51,6 +52,18 @@ Use `-LiteralPath` with these PowerShell cmdlets when the path is exact or may c
 - `Resolve-Path`
 
 Remember: `rg`, `git`, `pnpm`, `node`, `python`, and most CLIs are native commands. They do not understand `-LiteralPath`.
+
+For native commands, quote paths that contain `[]`, `()`, spaces, or other special characters. Put command options before `--`, then pass quoted paths:
+
+```powershell
+rg -n -S 'WorldCupMarketCard' -- 'app/pages/(home)' 'app/components/market'
+```
+
+Avoid unquoted route-group paths. PowerShell may parse the parentheses before `rg` ever sees the argument:
+
+```powershell
+rg -n 'WorldCupMarketCard' app\pages\(home\) -S
+```
 
 ## ripgrep
 
