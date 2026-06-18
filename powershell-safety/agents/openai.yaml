@@ -1,0 +1,4 @@
+interface:
+  display_name: "PowerShell Safety"
+  short_description: "Avoid PowerShell path and quoting traps."
+  default_prompt: "Use PowerShell Safety rules when composing or running Windows PowerShell commands."
