@@ -132,6 +132,18 @@ Read a full file:
 Get-Content -Raw -LiteralPath 'app\components\BasicSelect.vue'
 ```
 
+Preview a large file:
+
+```powershell
+Get-Content -LiteralPath 'large-output.txt' -TotalCount 80
+```
+
+Do not combine `-Raw` with `Select-Object -First` to preview a file. `-Raw` returns the whole file as one string, so `Select-Object -First 1` still emits the entire file:
+
+```powershell
+Get-Content -Raw -LiteralPath 'large-output.txt' | Select-Object -First 1
+```
+
 Read a line range. PowerShell arrays are zero-based:
 
 ```powershell
@@ -317,6 +329,7 @@ rg -n 'defineModel<[^>]+>' app
 | Search text | `rg -n 'pattern' app -S` |
 | Search literal text | `rg -n -F 'literal[text]' app` |
 | Search one file with rg | `rg -n 'pattern' -- 'app/pages/user/[address].vue'` |
+| Preview a large file | `Get-Content -LiteralPath 'large-output.txt' -TotalCount 80` |
 | Read line range | `$lines = Get-Content -LiteralPath 'file'; $lines[10..30]` |
 | Set env var | `$env:NAME = 'value'` |
 | Git diff for `[file]` | `git diff -- ':(literal)app/pages/user/[address].vue'` |
@@ -333,6 +346,7 @@ Before running a PowerShell command, ask:
 3. Should the command use `-LiteralPath`, or should the path be passed after `--`?
 4. Will the command write, delete, move, stage, commit, or push anything?
 5. Is any part of the command actually Bash syntax?
-6. Is the output clean enough to interpret and summarize for the user?
+6. Could the output be huge, and should it use `-TotalCount`, a line range, or an `rg` filter instead of `-Raw`?
+7. Is the output clean enough to interpret and summarize for the user?
 
 If uncertain, run a read-only inspection command first, then perform the state-changing command only after the target is clear.
