@@ -87,6 +87,25 @@ Search a single file. Put the path after `--`:
 rg -n 'BasicVirtualTable' -- 'app/pages/user/[address].vue'
 ```
 
+Put all `rg` options before `--`. After `--`, `rg` treats every following token as a path, so an option like `-S` becomes a filename:
+
+```powershell
+rg -n -S 'CHART_API|apiBase' -- '.env.dev' '.env.test' 'nuxt.config.ts'
+```
+
+Do not put options after `--`:
+
+```powershell
+rg -n 'CHART_API|apiBase' -- '.env.dev' '.env.test' 'nuxt.config.ts' -S
+```
+
+Do not pass quoted wildcard paths such as `'.env*'` to native commands. PowerShell will not expand the glob for `rg`, and `rg` will try to open a literal path containing `*` on Windows. Use `rg` globs or enumerate concrete files first:
+
+```powershell
+rg -n -S 'CHART_API|apiBase' -g '.env*' -- .
+Get-ChildItem -LiteralPath '.' -Filter '.env*' -File | ForEach-Object { $_.FullName }
+```
+
 List files:
 
 ```powershell
@@ -99,6 +118,8 @@ Avoid:
 
 ```powershell
 rg -LiteralPath 'app\pages\user\[address].vue'
+rg -n 'CHART_API' -- '.env*'
+rg -n 'CHART_API' -- '.env.dev' -S
 grep -R 'foo' app
 ```
 
@@ -329,6 +350,7 @@ rg -n 'defineModel<[^>]+>' app
 | Search text | `rg -n 'pattern' app -S` |
 | Search literal text | `rg -n -F 'literal[text]' app` |
 | Search one file with rg | `rg -n 'pattern' -- 'app/pages/user/[address].vue'` |
+| Search env files with rg | `rg -n -S 'pattern' -g '.env*' -- .` |
 | Preview a large file | `Get-Content -LiteralPath 'large-output.txt' -TotalCount 80` |
 | Read line range | `$lines = Get-Content -LiteralPath 'file'; $lines[10..30]` |
 | Set env var | `$env:NAME = 'value'` |
