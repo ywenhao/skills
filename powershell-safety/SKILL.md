@@ -143,6 +143,16 @@ git add -- app/components/BasicVirtualTable.vue
 git status --short
 ```
 
+`git diff --stat`, `git diff --name-only`, and ordinary `git diff` do not show untracked files. Always pair them with `git status --short` when reviewing worktree changes, especially after creating new files:
+
+```powershell
+git status --short
+git diff --stat
+git diff --name-only
+```
+
+If `git status --short` shows `??`, inspect those files directly; do not assume the diff commands covered them.
+
 Never use destructive Git commands such as `git reset --hard`, `git checkout --`, or `git clean -fd` unless the user explicitly asked for that exact operation. If the worktree is dirty, inspect with `git status --short` and only stage files changed for the current task.
 
 ## Reading Files
@@ -159,6 +169,8 @@ Preview a large file:
 Get-Content -LiteralPath 'large-output.txt' -TotalCount 80
 ```
 
+`-TotalCount 80` means "first 80 lines"; 80 is only an example, not a default rule. Choose the count based on file size and task context. Use a small preview for orientation, a larger preview when definitions span farther, and `-Raw` only when the whole file is needed.
+
 Do not combine `-Raw` with `Select-Object -First` to preview a file. `-Raw` returns the whole file as one string, so `Select-Object -First 1` still emits the entire file:
 
 ```powershell
@@ -170,6 +182,12 @@ Read a line range. PowerShell arrays are zero-based:
 ```powershell
 $lines = Get-Content -LiteralPath 'app\pages\user\[address].vue'
 $lines[120..160]
+```
+
+For a middle window without loading into a variable, use `Select-Object -Skip/-First`. Remember that `-Skip 120 -First 40` starts after 120 emitted lines and prints the next 40 lines; it does not print line numbers:
+
+```powershell
+Get-Content -LiteralPath 'app\pages\user\[address].vue' | Select-Object -Skip 120 -First 40
 ```
 
 Print line numbers:
@@ -356,6 +374,7 @@ rg -n 'defineModel<[^>]+>' app
 | Set env var | `$env:NAME = 'value'` |
 | Git diff for `[file]` | `git diff -- ':(literal)app/pages/user/[address].vue'` |
 | Git add for `[file]` | `git add -- ':(literal)app/pages/user/[address].vue'` |
+| Complete changed-file overview | `git status --short` plus `git diff --name-only` |
 | Delete exact file | `Remove-Item -LiteralPath 'path'` |
 | Recursive delete directory | `Resolve-Path -LiteralPath 'path'`, inspect it, then `Remove-Item -LiteralPath $resolved.Path -Recurse -Force` |
 
@@ -368,7 +387,8 @@ Before running a PowerShell command, ask:
 3. Should the command use `-LiteralPath`, or should the path be passed after `--`?
 4. Will the command write, delete, move, stage, commit, or push anything?
 5. Is any part of the command actually Bash syntax?
-6. Could the output be huge, and should it use `-TotalCount`, a line range, or an `rg` filter instead of `-Raw`?
-7. Is the output clean enough to interpret and summarize for the user?
+6. Could the output be huge, and should it use a context-sized `-TotalCount`, a line range, or an `rg` filter instead of `-Raw`?
+7. Am I relying on `git diff` output and accidentally ignoring untracked files? Check `git status --short`.
+8. Is the output clean enough to interpret and summarize for the user?
 
 If uncertain, run a read-only inspection command first, then perform the state-changing command only after the target is clear.
