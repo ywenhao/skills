@@ -288,6 +288,20 @@ Acceptable for small read-only checks:
 git status --short; git branch --show-current
 ```
 
+Do not pipe directly from a PowerShell statement block such as `foreach (...) { ... }`. It can fail with `An empty pipe element is not allowed`. Collect results first or use `ForEach-Object`:
+
+```powershell
+$rows = @()
+foreach ($file in $files) {
+  $rows += [PSCustomObject]@{ Path = $file }
+}
+$rows | Format-Table -AutoSize
+
+$files | ForEach-Object {
+  [PSCustomObject]@{ Path = $_ }
+} | Format-Table -AutoSize
+```
+
 Prefer separate commands for staging, committing, pushing, deleting, and moving:
 
 ```powershell
