@@ -99,6 +99,20 @@ Do not put options after `--`:
 rg -n 'CHART_API|apiBase' -- '.env.dev' '.env.test' 'nuxt.config.ts' -S
 ```
 
+This also applies to `--glob` / `-g`. Do not append globs after `--` and path arguments; PowerShell/native execution will pass them as literal path tokens, and `rg` may report errors like `rg: --glob: The system cannot find the file specified` or `*.vue: The filename, directory name, or volume label syntax is incorrect`.
+
+Use this:
+
+```powershell
+rg -n -S --glob '*.vue' --glob '*.ts' 'createEventDetailTo\(' -- app\components app\pages app\utils
+```
+
+Do not use this:
+
+```powershell
+rg -n -S 'createEventDetailTo\(' -- app\components app\pages app\utils --glob '*.vue' --glob '*.ts'
+```
+
 Do not pass quoted wildcard paths such as `'.env*'` to native commands. PowerShell will not expand the glob for `rg`, and `rg` will try to open a literal path containing `*` on Windows. Use `rg` globs or enumerate concrete files first:
 
 ```powershell
@@ -240,6 +254,20 @@ Native commands receive string arguments and use their own parameter syntax:
 pnpm run typecheck
 git diff -- ':(literal)app/pages/user/[address].vue'
 rg -n 'pattern' -- 'app/pages/user/[address].vue'
+```
+
+When the executable path itself is quoted, use PowerShell's call operator `&`. A quoted executable path without `&` is parsed as a string expression, and the next quoted argument can trigger `Unexpected token ... in expression or statement`.
+
+Use this:
+
+```powershell
+& 'C:\Users\admin\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe' 'script.py' 'arg'
+```
+
+Do not use this:
+
+```powershell
+'C:\Users\admin\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe' 'script.py' 'arg'
 ```
 
 Do not mix the models:
@@ -385,10 +413,11 @@ Before running a PowerShell command, ask:
 1. Does any path contain `[]`, spaces, parentheses, non-ASCII characters, or glob characters?
 2. Is this a PowerShell cmdlet or a native command?
 3. Should the command use `-LiteralPath`, or should the path be passed after `--`?
-4. Will the command write, delete, move, stage, commit, or push anything?
-5. Is any part of the command actually Bash syntax?
-6. Could the output be huge, and should it use a context-sized `-TotalCount`, a line range, or an `rg` filter instead of `-Raw`?
-7. Am I relying on `git diff` output and accidentally ignoring untracked files? Check `git status --short`.
-8. Is the output clean enough to interpret and summarize for the user?
+4. If the executable path is quoted, did I prefix it with `&`?
+5. Will the command write, delete, move, stage, commit, or push anything?
+6. Is any part of the command actually Bash syntax?
+7. Could the output be huge, and should it use a context-sized `-TotalCount`, a line range, or an `rg` filter instead of `-Raw`?
+8. Am I relying on `git diff` output and accidentally ignoring untracked files? Check `git status --short`.
+9. Is the output clean enough to interpret and summarize for the user?
 
 If uncertain, run a read-only inspection command first, then perform the state-changing command only after the target is clear.
