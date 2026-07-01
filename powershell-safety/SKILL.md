@@ -237,6 +237,22 @@ Use double quotes only when variable interpolation is intended:
 "branch=$branchName"
 ```
 
+Backslash does not escape double quotes in PowerShell the way it does in Bash. A command like `rg "foo\"bar"` can terminate the string early and make the rest of the regex look like PowerShell syntax. For patterns that contain quotes, prefer single-quoted arguments, split the search into simpler fixed-string searches, or assign the pattern to a variable first:
+
+```powershell
+rg -n -F 'score.includes("|")' -- app
+rg -n 'score\.includes\(''\|''\)' -- app
+
+$pattern = 'score\.includes\(''\|''\)|score\.includes\("\|"\)'
+rg -n $pattern -- app
+```
+
+Avoid complex double-quoted regex arguments that rely on Bash-style `\"` escaping:
+
+```powershell
+rg -n "score\.includes\(\"\|\"\)" -- app
+```
+
 Avoid backtick escaping unless there is no cleaner option. Backticks are easy to miss in Markdown, JSON, and nested shell commands.
 
 ## Native Commands Vs Cmdlets
